@@ -2,7 +2,9 @@ package com.example.demo.service;
 
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.model.User;
+import com.example.demo.model.VerificationToken;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.VerificationTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import javax.xml.ws.ServiceMode;
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -19,6 +22,9 @@ public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
 
     @Transactional
     public void signUp(RegisterRequest registerRequest) {
@@ -31,5 +37,20 @@ public class AuthService {
 
         userRepository.save(user);
 
+        generateVerificationToken(user);
+
     }
+
+    private String generateVerificationToken(User user) {
+        String tokenTemp = UUID.randomUUID().toString();
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(tokenTemp);
+        verificationToken.setUser(user);
+
+        verificationTokenRepository.save(verificationToken);
+
+        return tokenTemp;
+    }
+
+
 }

@@ -1,6 +1,8 @@
 package com.example.demo.model;
 
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
@@ -15,6 +17,8 @@ import java.time.Instant;
 
 @NoArgsConstructor
 @Entity
+@Data
+@AllArgsConstructor
 @Table(name = "token")
 public class VerificationToken {
 
@@ -26,4 +30,5 @@ public class VerificationToken {
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
     private Instant expiryDate;
+
 }
