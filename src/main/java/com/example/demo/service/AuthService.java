@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.AuthenticationResponse;
+import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.exception.TokenNotFoundException;
 import com.example.demo.model.NotificationEmail;
@@ -7,10 +9,16 @@ import com.example.demo.model.User;
 import com.example.demo.model.VerificationToken;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.VerificationTokenRepository;
+import com.example.demo.security.JwtProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import sun.plugin.liveconnect.SecurityContextHelper;
 
 import javax.transaction.Transactional;
 import javax.xml.ws.ServiceMode;
@@ -33,6 +41,12 @@ public class AuthService {
 
     @Autowired
     private MailService mailService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtProvider jwtProvider;
 
     @Transactional
     public void signUp(RegisterRequest registerRequest) {
@@ -72,6 +86,7 @@ public class AuthService {
         fetchUserAndEnable(verificationToken.get());
     }
 
+
     @Transactional
     private void fetchUserAndEnable(VerificationToken verificationToken) {
         String username = verificationToken.getUser().getUsername();
@@ -80,5 +95,13 @@ public class AuthService {
         user.get().setEnabled(true);
         log.info("Is user enabled:" +user.get().isEnabled());
         userRepository.save(user.get());
+    }
+
+    public AuthenticationResponse login(LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),
+                loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtProvider.generateToken(authentication);
+        return new AuthenticationResponse(token, loginRequest.getUsername());
     }
 }
