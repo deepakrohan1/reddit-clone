@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.model.NotificationEmail;
 import com.example.demo.model.User;
 import com.example.demo.model.VerificationToken;
 import com.example.demo.repository.UserRepository;
@@ -26,6 +27,9 @@ public class AuthService {
     @Autowired
     private VerificationTokenRepository verificationTokenRepository;
 
+    @Autowired
+    private MailService mailService;
+
     @Transactional
     public void signUp(RegisterRequest registerRequest) {
         User user = new User();
@@ -37,8 +41,12 @@ public class AuthService {
 
         userRepository.save(user);
 
-        generateVerificationToken(user);
+        String token = generateVerificationToken(user);
 
+        mailService.sendEmail(new NotificationEmail("Please activate your account",
+                "http://localhost:8080/api/auth/accountVerification/" + token,
+                      user.getEmail()
+                ));
     }
 
     private String generateVerificationToken(User user) {
